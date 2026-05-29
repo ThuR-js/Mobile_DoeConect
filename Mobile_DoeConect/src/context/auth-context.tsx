@@ -11,7 +11,6 @@ import type { Usuario, LoginPayload, ApiError } from '@/types';
 
 type AuthState = {
   usuario: Usuario | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -28,7 +27,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [state, setState] = useState<AuthState>({
     usuario: null,
-    token: null,
     isAuthenticated: false,
     isLoading: true,
     error: null,
@@ -40,7 +38,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (session) {
         setState({
           usuario: session.usuario,
-          token: session.token,
           isAuthenticated: true,
           isLoading: false,
           error: null,
@@ -55,9 +52,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
       const session = await authService.login(payload);
+      if (session.usuario.nivelAcesso && session.usuario.nivelAcesso !== '') {
+        await authService.logout();
+        setState((s) => ({
+          ...s,
+          isLoading: false,
+          error: 'Acesso restrito a donatários.',
+        }));
+        return;
+      }
       setState({
         usuario: session.usuario,
-        token: session.token,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -77,7 +82,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await authService.logout();
     setState({
       usuario: null,
-      token: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,

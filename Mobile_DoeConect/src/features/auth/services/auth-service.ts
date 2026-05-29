@@ -4,10 +4,9 @@ import type { LoginPayload, LoginResponse } from '@/types';
 
 export const authService = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
-    const { data } = await api.post<LoginResponse>('/usuario/login', payload);
-    await storage.setToken(data.token);
-    await storage.setUsuario(data.usuario);
-    return data;
+    const { data } = await api.post<Usuario>('/usuario/login', payload);
+    await storage.setUsuario(data);
+    return { usuario: data };
   },
 
   logout: async (): Promise<void> => {
@@ -15,11 +14,8 @@ export const authService = {
   },
 
   restoreSession: async (): Promise<LoginResponse | null> => {
-    const [token, usuario] = await Promise.all([
-      storage.getToken(),
-      storage.getUsuario(),
-    ]);
-    if (!token || !usuario) return null;
-    return { token, usuario };
+    const usuario = await storage.getUsuario();
+    if (!usuario) return null;
+    return { usuario };
   },
 };

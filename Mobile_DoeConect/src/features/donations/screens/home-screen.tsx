@@ -10,7 +10,12 @@ import { useAuth } from '@/context/auth-context';
 export default function HomeScreen() {
   const router = useRouter();
   const { width, height } = useResponsive();
-  const { usuario } = useAuth();
+  const { usuario, signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace('/');
+  }
 
   return (
     <ParallaxScrollView
@@ -75,6 +80,21 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/anuncios')}>
           <Text style={{ color: '#fff', fontSize: width * 0.042, fontWeight: '600' }}>
             Ver doações
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            borderRadius: 8,
+            borderWidth: 2.5,
+            borderColor: '#8B4814',
+            paddingVertical: height * 0.018,
+            paddingHorizontal: width * 0.1,
+            width: width * 0.7,
+            alignItems: 'center',
+          }}
+          onPress={handleSignOut}>
+          <Text style={{ color: '#5C3317', fontSize: width * 0.042, fontWeight: '600' }}>
+            Sair da conta
           </Text>
         </TouchableOpacity>
       </ThemedView>

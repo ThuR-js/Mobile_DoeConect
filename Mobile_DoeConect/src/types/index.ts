@@ -1,16 +1,12 @@
 // ─── Usuario ────────────────────────────────────────────────────────────────
 
-export type UsuarioRole = 'ADMIN' | 'USER';
-export type UsuarioStatus = 'ATIVO' | 'INATIVO';
-
 export type Usuario = {
   id: number;
   nome: string;
   email: string;
-  telefone?: string;
-  role: UsuarioRole;
-  status: UsuarioStatus;
-  dataCadastro: string;
+  nivelAcesso: string;
+  foto?: string;
+  regiao?: string;
 };
 
 export type UsuarioPerfil = {
@@ -48,7 +44,7 @@ export type LoginPayload = {
 };
 
 export type LoginResponse = {
-  token: string;
+  token?: string;
   usuario: Usuario;
 };
 
