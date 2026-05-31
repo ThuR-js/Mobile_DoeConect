@@ -11,20 +11,16 @@ import { useTheme } from '@/context/theme-context';
 export default function HomeScreen() {
   const router = useRouter();
   const { width, height } = useResponsive();
-<<<<<<< HEAD
-  const { usuario } = useAuth();
+  const { usuario, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const primeiroNome = usuario?.nome?.trim().split(' ')[0];
-
-  if (!primeiroNome && !usuario) return null;
-=======
-  const { usuario, signOut } = useAuth();
 
   async function handleSignOut() {
     await signOut();
     router.replace('/');
   }
->>>>>>> b05696911a96d54f3fa9272deb5d0e97bfcd695a
+
+  if (!primeiroNome && !usuario) return null;
 
   return (
     <ParallaxScrollView
