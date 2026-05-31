@@ -17,7 +17,7 @@ export default function HomeScreen() {
 
   async function handleSignOut() {
     await signOut();
-    router.replace('/');
+    router.replace('/login');
   }
 
   if (!primeiroNome && !usuario) return null;
