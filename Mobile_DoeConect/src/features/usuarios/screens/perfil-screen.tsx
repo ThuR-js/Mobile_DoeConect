@@ -3,12 +3,14 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Switch,
   TextInput,
   TouchableOpacity,
   View,
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/context/theme-context';
 import { usuarioService } from '@/features/usuarios/services/usuario-service';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
@@ -17,6 +19,7 @@ import type { ApiError } from '@/types';
 
 export default function PerfilScreen() {
   const { usuario, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { width } = useResponsive();
 
   const [editando, setEditando] = useState(false);
@@ -59,7 +62,7 @@ export default function PerfilScreen() {
       <ThemedText style={[styles.nome, { fontSize: width * 0.055 }]}>{usuario.nome}</ThemedText>
       <ThemedText style={styles.email}>{usuario.email}</ThemedText>
       <ThemedView style={styles.badge}>
-        <ThemedText style={styles.badgeText}>{usuario.role}</ThemedText>
+        <ThemedText style={styles.badgeText}>{usuario.nivelAcesso ?? usuario.role}</ThemedText>
       </ThemedView>
 
       {error && (
@@ -109,6 +112,18 @@ export default function PerfilScreen() {
           <ThemedText style={{ color: '#fff', fontWeight: '600' }}>Editar perfil</ThemedText>
         </TouchableOpacity>
       )}
+
+      <ThemedView style={styles.themeRow}>
+        <ThemedText style={{ fontWeight: '600', fontSize: 15 }}>
+          {theme === 'dark' ? '🌙 Modo escuro' : '☀️ Modo claro'}
+        </ThemedText>
+        <Switch
+          value={theme === 'dark'}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#ccc', true: '#5C3317' }}
+          thumbColor={theme === 'dark' ? '#fff' : '#5C3317'}
+        />
+      </ThemedView>
 
       <TouchableOpacity style={[styles.btn, styles.btnLogout, { marginTop: 16 }]} onPress={handleLogout}>
         <ThemedText style={{ color: '#c0392b', fontWeight: '600' }}>Sair da conta</ThemedText>
@@ -162,4 +177,16 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(220,53,69,0.3)',
   },
   errorText: { color: '#c0392b', fontSize: 13 },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: 'rgba(92,51,23,0.25)',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 16,
+  },
 });

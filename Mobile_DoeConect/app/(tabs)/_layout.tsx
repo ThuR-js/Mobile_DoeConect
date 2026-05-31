@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import { HapticTab } from '@/components/ui/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/context/theme-context';
 import { useAuth } from '@/context/auth-context';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
@@ -18,7 +18,7 @@ export default function TabLayout() {
     }
   }, [isAuthenticated, isLoading]);
 
-  const tint = Colors[colorScheme ?? 'light'].tint;
+  const tint = Colors[theme].tint;
 
   return (
     <Tabs
@@ -44,6 +44,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.fill" color={color} />,
+        }}
       />
     </Tabs>
   );

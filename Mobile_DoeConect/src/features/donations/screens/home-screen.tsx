@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
+import { StyleSheet, Switch, TouchableOpacity, Text, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import ParallaxScrollView from '@/components/layout/parallax-scroll-view';
@@ -6,11 +6,16 @@ import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/context/theme-context';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { width, height } = useResponsive();
   const { usuario } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const primeiroNome = usuario?.nome?.trim().split(' ')[0];
+
+  if (!primeiroNome && !usuario) return null;
 
   return (
     <ParallaxScrollView
@@ -41,7 +46,7 @@ export default function HomeScreen() {
 
       <ThemedView style={{ alignItems: 'center', justifyContent: 'center', marginTop: height * 0.02 }}>
         <ThemedText style={{ fontSize: width * 0.055, textAlign: 'center', fontWeight: 'bold' }}>
-          {`Olá, ${usuario?.nome?.split(' ')[0] ?? ''}! 👋`}
+          {`Olá, ${primeiroNome ?? usuario?.nome ?? '...'}! 👋`}
         </ThemedText>
       </ThemedView>
 
@@ -58,6 +63,18 @@ export default function HomeScreen() {
           AINDA FAZER NOVAS AMIZADES. FAÇA PARTE DESSA REDE DE SOLIDARIEDADE E EMPATIA COM RESPEITO E
           SEGURANÇA.
         </ThemedText>
+      </ThemedView>
+
+      <ThemedView style={styles.themeRow}>
+        <ThemedText style={{ fontWeight: '600', fontSize: 15 }}>
+          {theme === 'dark' ? '🌙 Modo escuro' : '☀️ Modo claro'}
+        </ThemedText>
+        <Switch
+          value={theme === 'dark'}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#ccc', true: '#5C3317' }}
+          thumbColor={theme === 'dark' ? '#fff' : '#5C3317'}
+        />
       </ThemedView>
 
       <ThemedView style={{ alignItems: 'center', gap: 12, marginBottom: width * 0.08 }}>
@@ -84,4 +101,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   headerImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: 'rgba(92,51,23,0.25)',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 8,
+  },
 });
