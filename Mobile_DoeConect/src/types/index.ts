@@ -1,12 +1,16 @@
 // ─── Usuario ────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 export type UsuarioRole = 'ADMIN' | 'USER' | 'DONATARIO' | 'DOADOR';
 export type UsuarioStatus = 'ATIVO' | 'INATIVO';
 
+=======
+>>>>>>> b05696911a96d54f3fa9272deb5d0e97bfcd695a
 export type Usuario = {
   id: number;
   nome: string;
   email: string;
+<<<<<<< HEAD
   telefone?: string;
   foto?: string;
   regiao?: string;
@@ -14,6 +18,11 @@ export type Usuario = {
   role?: UsuarioRole;
   status?: UsuarioStatus;
   dataCadastro?: string;
+=======
+  nivelAcesso: string;
+  foto?: string;
+  regiao?: string;
+>>>>>>> b05696911a96d54f3fa9272deb5d0e97bfcd695a
 };
 
 export type UsuarioPerfil = {

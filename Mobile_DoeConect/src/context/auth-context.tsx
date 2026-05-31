@@ -52,7 +52,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
       const session = await authService.login(payload);
-      console.log('[signIn] usuario recebido:', JSON.stringify(session.usuario));
       setState({
         usuario: session.usuario,
         isAuthenticated: true,
