@@ -20,6 +20,7 @@ type AuthContextValue = AuthState & {
   signIn: (payload: LoginPayload) => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
+  updateUsuario: (dados: Partial<Usuario>) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -83,8 +84,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setState((s) => ({ ...s, error: null }));
   }, []);
 
+  const updateUsuario = useCallback((dados: Partial<Usuario>) => {
+    setState((s) => s.usuario ? { ...s, usuario: { ...s.usuario, ...dados } } : s);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...state, signIn, signOut, clearError }}>
+    <AuthContext.Provider value={{ ...state, signIn, signOut, clearError, updateUsuario }}>
       {children}
     </AuthContext.Provider>
   );

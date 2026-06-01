@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Switch,
@@ -18,22 +19,29 @@ import { useResponsive } from '@/hooks/use-responsive';
 import type { ApiError } from '@/types';
 
 export default function PerfilScreen() {
-  const { usuario, signOut } = useAuth();
+  const { usuario, signOut, updateUsuario } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { width } = useResponsive();
 
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(usuario?.nome ?? '');
-  const [telefone, setTelefone] = useState(usuario?.telefone ?? '');
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [isSavingSenha, setIsSavingSenha] = useState(false);
+  const [senhaError, setSenhaError] = useState<string | null>(null);
 
   async function handleSalvar() {
     if (!usuario) return;
     setIsSaving(true);
     setError(null);
     try {
-      await usuarioService.atualizar(usuario.id, { nome, telefone: telefone || undefined });
+      await usuarioService.atualizar(usuario.id, { nome });
+      updateUsuario({ nome });
       setEditando(false);
       Alert.alert('Sucesso', 'Perfil atualizado!');
     } catch (err) {
@@ -41,6 +49,32 @@ export default function PerfilScreen() {
       setError(apiError.message ?? 'Erro ao salvar.');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleAlterarSenha() {
+    if (!usuario) return;
+    if (novaSenha !== confirmarSenha) {
+      setSenhaError('As senhas não coincidem.');
+      return;
+    }
+    if (novaSenha.length < 6) {
+      setSenhaError('A nova senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+    setIsSavingSenha(true);
+    setSenhaError(null);
+    try {
+      await usuarioService.alterarSenha(usuario.id, { senhaAtual, novaSenha });
+      setSenhaAtual('');
+      setNovaSenha('');
+      setConfirmarSenha('');
+      Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setSenhaError(apiError.message ?? 'Erro ao alterar senha.');
+    } finally {
+      setIsSavingSenha(false);
     }
   }
 
@@ -55,8 +89,13 @@ export default function PerfilScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
+      {/* Avatar */}
       <ThemedView style={styles.avatar}>
-        <ThemedText style={{ fontSize: 48 }}>👤</ThemedText>
+        {usuario.foto ? (
+          <Image source={{ uri: usuario.foto }} style={styles.avatarImage} />
+        ) : (
+          <ThemedText style={{ fontSize: 48 }}>👤</ThemedText>
+        )}
       </ThemedView>
 
       <ThemedText style={[styles.nome, { fontSize: width * 0.055 }]}>{usuario.nome}</ThemedText>
@@ -71,6 +110,7 @@ export default function PerfilScreen() {
         </View>
       )}
 
+      {/* Editar perfil */}
       {editando ? (
         <ThemedView style={styles.form}>
           <ThemedText style={styles.label}>Nome</ThemedText>
@@ -80,14 +120,7 @@ export default function PerfilScreen() {
             onChangeText={setNome}
             editable={!isSaving}
           />
-          <ThemedText style={styles.label}>Telefone</ThemedText>
-          <TextInput
-            style={[styles.input, { fontSize: width * 0.038 }]}
-            value={telefone}
-            onChangeText={setTelefone}
-            keyboardType="phone-pad"
-            editable={!isSaving}
-          />
+
           <View style={styles.formButtons}>
             <TouchableOpacity
               style={[styles.btn, styles.btnSecundario]}
@@ -108,11 +141,61 @@ export default function PerfilScreen() {
           </View>
         </ThemedView>
       ) : (
-        <TouchableOpacity style={[styles.btn, styles.btnPrimario, { marginTop: 24 }]} onPress={() => setEditando(true)}>
+        <TouchableOpacity style={[styles.btn, styles.btnPrimario, { marginTop: 24, width: '100%' }]} onPress={() => setEditando(true)}>
           <ThemedText style={{ color: '#fff', fontWeight: '600' }}>Editar perfil</ThemedText>
         </TouchableOpacity>
       )}
 
+      {/* Alterar senha */}
+      <ThemedView style={styles.senhaBox}>
+        <ThemedText style={styles.senhaTitle}>Alterar senha</ThemedText>
+
+        {senhaError && (
+          <View style={[styles.errorBox, { marginBottom: 8 }]}>
+            <ThemedText style={styles.errorText}>⚠️ {senhaError}</ThemedText>
+          </View>
+        )}
+
+        <ThemedText style={styles.label}>Senha atual</ThemedText>
+        <TextInput
+          style={[styles.input, { fontSize: width * 0.038 }]}
+          value={senhaAtual}
+          onChangeText={setSenhaAtual}
+          secureTextEntry
+          editable={!isSavingSenha}
+          placeholder="••••••••"
+        />
+        <ThemedText style={styles.label}>Nova senha</ThemedText>
+        <TextInput
+          style={[styles.input, { fontSize: width * 0.038 }]}
+          value={novaSenha}
+          onChangeText={setNovaSenha}
+          secureTextEntry
+          editable={!isSavingSenha}
+          placeholder="••••••••"
+        />
+        <ThemedText style={styles.label}>Confirmar nova senha</ThemedText>
+        <TextInput
+          style={[styles.input, { fontSize: width * 0.038 }]}
+          value={confirmarSenha}
+          onChangeText={setConfirmarSenha}
+          secureTextEntry
+          editable={!isSavingSenha}
+          placeholder="••••••••"
+        />
+        <TouchableOpacity
+          style={[styles.btnSenha, styles.btnPrimario, isSavingSenha && { opacity: 0.6 }]}
+          onPress={handleAlterarSenha}
+          disabled={isSavingSenha}>
+          {isSavingSenha ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Salvar nova senha</ThemedText>
+          )}
+        </TouchableOpacity>
+      </ThemedView>
+
+      {/* Tema */}
       <ThemedView style={styles.themeRow}>
         <ThemedText style={{ fontWeight: '600', fontSize: 15 }}>
           {theme === 'dark' ? '🌙 Modo escuro' : '☀️ Modo claro'}
@@ -125,7 +208,7 @@ export default function PerfilScreen() {
         />
       </ThemedView>
 
-      <TouchableOpacity style={[styles.btn, styles.btnLogout, { marginTop: 16 }]} onPress={handleLogout}>
+      <TouchableOpacity style={[styles.btn, styles.btnLogout]} onPress={handleLogout}>
         <ThemedText style={{ color: '#c0392b', fontWeight: '600' }}>Sair da conta</ThemedText>
       </TouchableOpacity>
     </ScrollView>
@@ -143,7 +226,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 2,
     borderColor: '#5C3317',
+    overflow: 'hidden',
   },
+  avatarImage: { width: 96, height: 96, borderRadius: 48 },
   nome: { fontWeight: 'bold', textAlign: 'center' },
   email: { opacity: 0.6, fontSize: 14 },
   badge: {
@@ -165,9 +250,10 @@ const styles = StyleSheet.create({
   },
   formButtons: { flexDirection: 'row', gap: 12, marginTop: 4 },
   btn: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  btnSenha: { alignSelf: 'stretch', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 4 },
   btnPrimario: { backgroundColor: '#5C3317' },
   btnSecundario: { borderWidth: 1.5, borderColor: '#5C3317' },
-  btnLogout: { borderWidth: 1.5, borderColor: '#c0392b', flex: 0, paddingHorizontal: 32 },
+  btnLogout: { borderWidth: 1.5, borderColor: '#c0392b', width: '100%', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 16 },
   errorBox: {
     backgroundColor: 'rgba(220,53,69,0.1)',
     borderRadius: 8,
@@ -177,6 +263,16 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(220,53,69,0.3)',
   },
   errorText: { color: '#c0392b', fontSize: 13 },
+  senhaBox: {
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: 'rgba(92,51,23,0.25)',
+    borderRadius: 10,
+    padding: 16,
+    marginTop: 24,
+    gap: 2,
+  },
+  senhaTitle: { fontWeight: '700', fontSize: 15, marginBottom: 12 },
   themeRow: {
     flexDirection: 'row',
     alignItems: 'center',
