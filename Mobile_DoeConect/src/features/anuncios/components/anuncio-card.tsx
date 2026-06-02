@@ -18,8 +18,8 @@ export function AnuncioCard({ anuncio, favoritado = false, onPress, onFavoritar 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
       <ThemedView style={[styles.card, { width: cardWidth }]}>
-        {anuncio.imagemUrl ? (
-          <Image source={{ uri: anuncio.imagemUrl }} style={styles.imagem} resizeMode="cover" />
+        {anuncio.foto ? (
+          <Image source={{ uri: anuncio.foto }} style={styles.imagem} resizeMode="cover" />
         ) : (
           <View style={styles.semImagem}>
             <ThemedText style={styles.semImagemText}>📦</ThemedText>
@@ -27,11 +27,11 @@ export function AnuncioCard({ anuncio, favoritado = false, onPress, onFavoritar 
         )}
         <View style={styles.info}>
           <ThemedText style={styles.titulo} numberOfLines={2}>
-            {anuncio.titulo}
+            {anuncio.nome}
           </ThemedText>
           <ThemedText style={styles.categoria}>{anuncio.categoria.nome}</ThemedText>
           <ThemedText style={styles.doador} numberOfLines={1}>
-            {anuncio.doador.nomeFantasia ?? 'Doador anônimo'}
+            {anuncio.doador.nome}
           </ThemedText>
         </View>
         {onFavoritar && (

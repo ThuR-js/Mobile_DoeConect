@@ -1,6 +1,6 @@
 import { api } from '@/services/api';
 import { storage } from '@/services/storage';
-import type { LoginPayload, LoginResponse } from '@/types';
+import type { LoginPayload, LoginResponse, Usuario } from '@/types';
 
 export const authService = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {

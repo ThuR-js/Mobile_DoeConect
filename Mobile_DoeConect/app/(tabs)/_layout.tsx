@@ -35,11 +35,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="anuncios"
+        name="solicitacoes"
         options={{
-          title: 'Anúncios',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="paperplane.fill" color={color} />,
+          title: 'Solicitações',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="list.bullet" color={color} />,
         }}
+      />
+      <Tabs.Screen
+        name="anuncios"
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="explore"

@@ -1,28 +1,12 @@
-// ─── Usuario ────────────────────────────────────────────────────────────────
+// ─── Usuario ─────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-export type UsuarioRole = 'ADMIN' | 'USER' | 'DONATARIO' | 'DOADOR';
-export type UsuarioStatus = 'ATIVO' | 'INATIVO';
-
-=======
->>>>>>> b05696911a96d54f3fa9272deb5d0e97bfcd695a
 export type Usuario = {
   id: number;
   nome: string;
   email: string;
-<<<<<<< HEAD
-  telefone?: string;
-  foto?: string;
-  regiao?: string;
   nivelAcesso?: string;
-  role?: UsuarioRole;
-  status?: UsuarioStatus;
-  dataCadastro?: string;
-=======
-  nivelAcesso: string;
   foto?: string;
   regiao?: string;
->>>>>>> b05696911a96d54f3fa9272deb5d0e97bfcd695a
 };
 
 export type UsuarioPerfil = {
@@ -38,13 +22,12 @@ export type UsuarioCreatePayload = {
   nome: string;
   email: string;
   senha: string;
-  telefone?: string;
+  nivelAcesso?: string;
 };
 
 export type UsuarioUpdatePayload = {
   nome?: string;
   email?: string;
-  telefone?: string;
 };
 
 export type UsuarioSenhaPayload = {
@@ -52,7 +35,7 @@ export type UsuarioSenhaPayload = {
   novaSenha: string;
 };
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export type LoginPayload = {
   email: string;
@@ -60,67 +43,75 @@ export type LoginPayload = {
 };
 
 export type LoginResponse = {
-  token?: string;
   usuario: Usuario;
 };
 
-// ─── Doador ──────────────────────────────────────────────────────────────────
+// ─── Doador ───────────────────────────────────────────────────────────────────
 
 export type Doador = {
   id: number;
-  usuarioId: number;
-  nomeFantasia?: string;
-  descricao?: string;
-  endereco?: string;
+  nome: string;
+  cpf?: string;
+  cep?: string;
+  foto?: string;
   cidade?: string;
   estado?: string;
-  cep?: string;
+  nomeFantasia?: string;
   dataCadastro: string;
 };
 
-export type DoadorCreatePayload = {
-  usuarioId: number;
-  nomeFantasia?: string;
-  descricao?: string;
-  endereco?: string;
-  cidade?: string;
-  estado?: string;
-  cep?: string;
-};
-
-export type DoadorUpdatePayload = Omit<DoadorCreatePayload, 'usuarioId'>;
-
-// ─── Anuncio ─────────────────────────────────────────────────────────────────
-
-export type AnuncioStatus = 'ATIVO' | 'INATIVO';
+// ─── Categoria ────────────────────────────────────────────────────────────────
 
 export type Categoria = {
   id: number;
   nome: string;
 };
 
+// ─── Anuncio ──────────────────────────────────────────────────────────────────
+
 export type Anuncio = {
   id: number;
-  titulo: string;
+  nome: string;
   descricao: string;
-  imagemUrl?: string;
-  status: AnuncioStatus;
+  foto?: string;
+  tamanho: string;
+  condicao: string;
+  regiao?: string;
+  statusAnuncio: string;
   categoria: Categoria;
   doador: Doador;
   dataCadastro: string;
 };
 
 export type AnuncioCreatePayload = {
-  titulo: string;
+  nome: string;
   descricao: string;
-  imagemUrl?: string;
   categoriaId: number;
   doadorId: number;
+  tamanho: string;
+  condicao: string;
 };
 
 export type AnuncioUpdatePayload = Partial<AnuncioCreatePayload>;
 
-// ─── Favorito ────────────────────────────────────────────────────────────────
+// ─── Solicitacao ──────────────────────────────────────────────────────────────
+
+export type Solicitacao = {
+  id: number;
+  dataCadastro: string;
+  statusSolicitacao: string;
+  telefone?: string;
+  usuario: Usuario;
+  anuncio: Anuncio;
+};
+
+export type SolicitacaoCreatePayload = {
+  usuario: { id: number };
+  anuncio: { id: number };
+  telefone?: string;
+};
+
+// ─── Favorito ─────────────────────────────────────────────────────────────────
 
 export type Favorito = {
   anuncioId: number;
@@ -128,7 +119,7 @@ export type Favorito = {
   anuncio: Anuncio;
 };
 
-// ─── Utilitários ─────────────────────────────────────────────────────────────
+// ─── Utilitários ──────────────────────────────────────────────────────────────
 
 export type ColorScheme = 'light' | 'dark';
 

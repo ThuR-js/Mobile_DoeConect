@@ -22,7 +22,6 @@ export default function CadastroScreen() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [telefone, setTelefone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,10 +34,14 @@ export default function CadastroScreen() {
       Alert.alert('Atenção', 'Nome, e-mail e senha são obrigatórios.');
       return;
     }
+    if (senha.length > 6) {
+      Alert.alert('Atenção', 'A senha deve ter no máximo 6 caracteres.');
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      await usuarioService.criar({ nome, email, senha, telefone: telefone || undefined });
+      await usuarioService.criar({ nome, email, senha, nivelAcesso: 'DONATARIO' });
       await signIn({ email, senha });
       router.replace('/(tabs)');
     } catch (err) {
@@ -95,37 +98,46 @@ export default function CadastroScreen() {
               </View>
             )}
 
-            {[
-              { label: 'Nome completo', value: nome, setter: setNome, placeholder: 'Seu nome' },
-              { label: 'E-mail', value: email, setter: setEmail, placeholder: 'seu@email.com', keyboard: 'email-address' as const },
-              { label: 'Telefone (opcional)', value: telefone, setter: setTelefone, placeholder: '(11) 99999-9999', keyboard: 'phone-pad' as const },
-              { label: 'Senha', value: senha, setter: setSenha, placeholder: '••••••••', secure: true },
-            ].map(({ label, value, setter, placeholder, keyboard, secure }) => (
-              <View key={label}>
-                <Text style={{ color: '#fff', fontSize: width * 0.038, marginBottom: 4, fontWeight: '600' }}>
-                  {label}
-                </Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.4)',
-                    borderRadius: 8,
-                    padding: width * 0.035,
-                    color: '#fff',
-                    fontSize: width * 0.038,
-                    marginBottom: height * 0.018,
-                  }}
-                  placeholder={placeholder}
-                  placeholderTextColor="#ccc"
-                  keyboardType={keyboard}
-                  autoCapitalize="none"
-                  secureTextEntry={secure}
-                  value={value}
-                  onChangeText={setter}
-                  editable={!isLoading}
-                />
-              </View>
-            ))}
+            <Text style={{ color: '#fff', fontSize: width * 0.038, marginBottom: 4, fontWeight: '600' }}>
+              Nome completo
+            </Text>
+            <TextInput
+              style={inputStyle(width, height)}
+              placeholder="Seu nome"
+              placeholderTextColor="#ccc"
+              maxLength={30}
+              value={nome}
+              onChangeText={setNome}
+              editable={!isLoading}
+            />
+
+            <Text style={{ color: '#fff', fontSize: width * 0.038, marginBottom: 4, fontWeight: '600' }}>
+              E-mail
+            </Text>
+            <TextInput
+              style={inputStyle(width, height)}
+              placeholder="seu@email.com"
+              placeholderTextColor="#ccc"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+              editable={!isLoading}
+            />
+
+            <Text style={{ color: '#fff', fontSize: width * 0.038, marginBottom: 4, fontWeight: '600' }}>
+              Senha (máx. 6 caracteres)
+            </Text>
+            <TextInput
+              style={inputStyle(width, height)}
+              placeholder="••••••"
+              placeholderTextColor="#ccc"
+              secureTextEntry
+              maxLength={6}
+              value={senha}
+              onChangeText={setSenha}
+              editable={!isLoading}
+            />
 
             <TouchableOpacity
               style={[styles.button, { paddingVertical: height * 0.018 }, isLoading && { opacity: 0.6 }]}
@@ -144,6 +156,18 @@ export default function CadastroScreen() {
       </KeyboardAvoidingView>
     </ImageBackground>
   );
+}
+
+function inputStyle(width: number, height: number) {
+  return {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+    borderRadius: 8,
+    padding: width * 0.035,
+    color: '#fff',
+    fontSize: width * 0.038,
+    marginBottom: height * 0.018,
+  };
 }
 
 const styles = StyleSheet.create({
