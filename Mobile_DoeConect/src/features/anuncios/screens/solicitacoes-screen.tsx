@@ -28,7 +28,7 @@ export default function SolicitacoesScreen() {
     setError(null);
     try {
       const data = await solicitacaoService.listarPorUsuario(usuario.id);
-      setSolicitacoes(data);
+      setSolicitacoes(data.filter((s) => s.anuncio != null));
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message ?? 'Erro ao carregar solicitações.');
@@ -63,7 +63,7 @@ export default function SolicitacoesScreen() {
             <ThemedView style={styles.card}>
               <View style={styles.cardHeader}>
                 <ThemedText style={[styles.anuncioNome, { fontSize: width * 0.042 }]} numberOfLines={2}>
-                  {item.anuncio.nome}
+                  {item.anuncio?.nome ?? '—'}
                 </ThemedText>
                 <View style={[styles.statusBadge, { backgroundColor: cfg.color }]}>
                   <ThemedText style={styles.statusText}>{cfg.label}</ThemedText>
@@ -71,14 +71,14 @@ export default function SolicitacoesScreen() {
               </View>
 
               <ThemedText style={styles.categoria}>
-                {item.anuncio.categoria.nome}
+                {item.anuncio?.categoria?.nome ?? '—'}
               </ThemedText>
 
               <View style={styles.divider} />
 
               <View style={styles.infoRow}>
                 <ThemedText style={styles.infoLabel}>Doador</ThemedText>
-                <ThemedText style={styles.infoValue}>{item.anuncio.doador.nome}</ThemedText>
+                <ThemedText style={styles.infoValue}>{item.anuncio?.doador?.nome ?? '—'}</ThemedText>
               </View>
               <View style={styles.infoRow}>
                 <ThemedText style={styles.infoLabel}>Data</ThemedText>

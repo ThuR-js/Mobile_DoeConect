@@ -9,6 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { anuncioService } from '@/features/anuncios/services/anuncio-service';
@@ -125,45 +126,83 @@ export default function AnuncioDetalheScreen() {
         </ThemedView>
       </ScrollView>
 
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <ThemedView style={styles.modalBox}>
-            <ThemedText style={styles.modalTitulo}>Enviar Solicitação</ThemedText>
-            <ThemedText style={styles.modalSubtitulo}>
-              Deixe uma mensagem de contato para o doador (telefone, e-mail ou recado).
-            </ThemedText>
-            <TextInput
-              style={[styles.modalInput, styles.modalInputMultiline]}
-              placeholder="Ex: (11) 99999-9999 / seu@email.com / prefiro contato por WhatsApp..."
-              placeholderTextColor="#aaa"
-              multiline
-              numberOfLines={4}
-              maxLength={40}
-              value={contato}
-              onChangeText={setContato}
-              editable={!enviando}
-            />
-            <View style={styles.modalBtns}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancelar]}
-                onPress={() => { setModalVisible(false); setContato(''); }}
-                disabled={enviando}>
-                <ThemedText style={{ fontWeight: '600' }}>Cancelar</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnEnviar, enviando && { opacity: 0.6 }]}
-                onPress={handleEnviarSolicitacao}
-                disabled={enviando}>
-                {enviando ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Enviar</ThemedText>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ThemedView>
-        </View>
-      </Modal>
+      {Platform.OS === 'web' ? (
+        modalVisible ? (
+          <View style={styles.modalOverlay}>
+            <ThemedView style={styles.modalBox}>
+              <ModalConteudo
+                contato={contato}
+                setContato={setContato}
+                enviando={enviando}
+                onCancelar={() => { setModalVisible(false); setContato(''); }}
+                onEnviar={handleEnviarSolicitacao}
+              />
+            </ThemedView>
+          </View>
+        ) : null
+      ) : (
+        <Modal visible={modalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <ThemedView style={styles.modalBox}>
+              <ModalConteudo
+                contato={contato}
+                setContato={setContato}
+                enviando={enviando}
+                onCancelar={() => { setModalVisible(false); setContato(''); }}
+                onEnviar={handleEnviarSolicitacao}
+              />
+            </ThemedView>
+          </View>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function ModalConteudo({
+  contato, setContato, enviando, onCancelar, onEnviar,
+}: {
+  contato: string;
+  setContato: (v: string) => void;
+  enviando: boolean;
+  onCancelar: () => void;
+  onEnviar: () => void;
+}) {
+  return (
+    <>
+      <ThemedText style={styles.modalTitulo}>Enviar Solicitação</ThemedText>
+      <ThemedText style={styles.modalSubtitulo}>
+        Deixe uma mensagem de contato para o doador (telefone, e-mail ou recado).
+      </ThemedText>
+      <TextInput
+        style={[styles.modalInput, styles.modalInputMultiline]}
+        placeholder="Ex: (11) 99999-9999 / seu@email.com / prefiro contato por WhatsApp..."
+        placeholderTextColor="#aaa"
+        multiline
+        numberOfLines={4}
+        maxLength={40}
+        value={contato}
+        onChangeText={setContato}
+        editable={!enviando}
+      />
+      <View style={styles.modalBtns}>
+        <TouchableOpacity
+          style={[styles.modalBtn, styles.modalBtnCancelar]}
+          onPress={onCancelar}
+          disabled={enviando}>
+          <ThemedText style={{ fontWeight: '600' }}>Cancelar</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modalBtn, styles.modalBtnEnviar, enviando && { opacity: 0.6 }]}
+          onPress={onEnviar}
+          disabled={enviando}>
+          {enviando ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Enviar</ThemedText>
+          )}
+        </TouchableOpacity>
+      </View>
     </>
   );
 }
@@ -222,7 +261,17 @@ const styles = StyleSheet.create({
   },
   btnSolicitacaoText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   modalOverlay: {
-    flex: 1,
+    ...Platform.select({
+      web: {
+        position: 'fixed' as any,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 999,
+      },
+      default: { flex: 1 },
+    }),
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
