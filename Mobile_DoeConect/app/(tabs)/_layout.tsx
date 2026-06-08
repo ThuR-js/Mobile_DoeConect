@@ -1,16 +1,19 @@
 import { Tabs, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-
-import { HapticTab } from '@/components/ui/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useTheme } from '@/context/theme-context';
+import { Text } from 'react-native';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/context/theme-context';
 
 export default function TabLayout() {
-  const { theme } = useTheme();
   const { isAuthenticated, isLoading } = useAuth();
+  const { theme } = useTheme();
   const router = useRouter();
+
+  const isDark = theme === 'dark';
+  const tabBg = isDark ? '#1E1E1E' : '#FFFFFF';
+  const tabBorder = isDark ? '#2A2A2A' : '#F0E8E0';
+  const activeColor = isDark ? '#C47A45' : '#8B4A1E';
+  const inactiveColor = isDark ? '#6A6A6A' : '#B0A090';
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -18,27 +21,37 @@ export default function TabLayout() {
     }
   }, [isAuthenticated, isLoading]);
 
-  const tint = Colors[theme].tint;
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
+        tabBarStyle: {
+          backgroundColor: tabBg,
+          borderTopColor: tabBorder,
+          borderTopWidth: 1,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Início',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🏠</Text>,
         }}
       />
       <Tabs.Screen
         name="solicitacoes"
         options={{
           title: 'Solicitações',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="list.bullet" color={color} />,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>📦</Text>,
         }}
       />
       <Tabs.Screen
@@ -53,7 +66,7 @@ export default function TabLayout() {
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>👤</Text>,
         }}
       />
     </Tabs>
