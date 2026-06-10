@@ -16,13 +16,14 @@ export default function AnunciosScreen() {
   const { isFavoritado, toggleFavorito } = useFavoritos(usuario?.id ?? null);
   const router = useRouter();
   const { width } = useResponsive();
+  const effectiveWidth = Math.min(width, 390);
 
   if (isLoading) return <LoadingOverlay mensagem="Carregando anúncios..." />;
   if (error) return <ErrorMessage mensagem={error} onRetry={refetch} />;
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={[styles.titulo, { fontSize: width * 0.055 }]}>
+      <ThemedText style={[styles.titulo, { fontSize: effectiveWidth * 0.055 }]}>
         Doações disponíveis
       </ThemedText>
       <FlatList
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 16 },
   titulo: { fontWeight: 'bold', paddingHorizontal: 16, marginBottom: 12 },
   lista: { paddingHorizontal: 16, paddingBottom: 24 },
-  row: { justifyContent: 'space-between' },
+  row: { justifyContent: 'center', gap: 16 },
   vazio: { flex: 1, alignItems: 'center', paddingTop: 60 },
   vazioText: { opacity: 0.5, fontSize: 14 },
 });

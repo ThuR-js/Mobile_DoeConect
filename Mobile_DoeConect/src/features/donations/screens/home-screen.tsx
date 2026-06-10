@@ -29,7 +29,7 @@ const CATEGORIAS: { id: string; label: string; icon: keyof typeof Ionicons.glyph
   { id: 'camisetas',  label: 'Camisetas',  icon: 'shirt-outline' },
   { id: 'tenis',      label: 'Tênis',      icon: 'footsteps-outline' },
   { id: 'calcas',     label: 'Calças',     icon: 'happy-outline' },
-  { id: 'blusas',     label: 'Blusas',     icon: 'bag-handle-outline' },
+  { id: 'blusas',     label: 'Moletons',   icon: 'bag-handle-outline' },
   { id: 'shorts',     label: 'Shorts',     icon: 'cut-outline' },
   { id: 'outros',     label: 'Outros',     icon: 'ellipsis-horizontal-outline' },
 ];
@@ -154,7 +154,7 @@ export default function HomeScreen() {
       if (categoriaAtiva === 'camisetas') return nome.includes('camisa') || nome.includes('camiseta');
       if (categoriaAtiva === 'tenis') return nome.includes('têni') || nome.includes('tenis') || cat.includes('calçado') || cat.includes('tenis');
       if (categoriaAtiva === 'calcas') return nome.includes('calça') || nome.includes('calca');
-      if (categoriaAtiva === 'blusas') return nome.includes('blusa');
+      if (categoriaAtiva === 'blusas') return nome.includes('blusa') || cat.includes('blusa') || cat.includes('moleton') || cat.includes('moletons');
       if (categoriaAtiva === 'shorts') return nome.includes('short');
       return cat.includes(categoriaAtiva);
     })();
