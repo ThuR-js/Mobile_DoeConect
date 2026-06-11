@@ -3,10 +3,12 @@ import { useEffect } from 'react';
 import { Text } from 'react-native';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
+import { useFavoritosContext } from '@/context/favoritos-context';
 
 export default function TabLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, usuario } = useAuth();
   const { theme } = useTheme();
+  const { carregarDoBackend } = useFavoritosContext();
   const router = useRouter();
 
   const isDark = theme === 'dark';
@@ -20,6 +22,10 @@ export default function TabLayout() {
       router.replace('/');
     }
   }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    if (usuario?.id) carregarDoBackend(usuario.id);
+  }, [usuario?.id]);
 
   return (
     <Tabs
@@ -52,6 +58,13 @@ export default function TabLayout() {
         options={{
           title: 'Solicitações',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>📦</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="favoritos"
+        options={{
+          title: 'Favoritos',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>❤️</Text>,
         }}
       />
       <Tabs.Screen

@@ -8,7 +8,7 @@ type State = {
   error: string | null;
 };
 
-export function useAnuncios() {
+export function useAnuncios(categoriaId?: number | null) {
   const [state, setState] = useState<State>({
     anuncios: [],
     isLoading: true,
@@ -18,7 +18,9 @@ export function useAnuncios() {
   const carregar = useCallback(async () => {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
-      const data = await anuncioService.listar();
+      const data = categoriaId
+        ? await anuncioService.listarPorCategoria(categoriaId)
+        : await anuncioService.listar();
       setState({ anuncios: data, isLoading: false, error: null });
     } catch (err) {
       const apiError = err as ApiError;
@@ -28,7 +30,7 @@ export function useAnuncios() {
         error: apiError.message ?? 'Erro ao carregar anúncios.',
       }));
     }
-  }, []);
+  }, [categoriaId]);
 
   useEffect(() => {
     carregar();

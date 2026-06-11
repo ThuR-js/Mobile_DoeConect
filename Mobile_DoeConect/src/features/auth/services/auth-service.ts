@@ -5,6 +5,9 @@ import type { LoginPayload, LoginResponse, Usuario } from '@/types';
 export const authService = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
     const { data } = await api.post<Usuario>('/usuario/login', payload);
+    if (data.nivelAcesso === 'DOADOR') {
+      throw { message: 'Acesso não permitido. Use o site de doadores.', status: 403 };
+    }
     await storage.setUsuario(data);
     return { usuario: data };
   },

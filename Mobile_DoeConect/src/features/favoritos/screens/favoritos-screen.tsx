@@ -1,57 +1,143 @@
-import { FlatList, StyleSheet, View } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { useFavoritos } from '@/features/favoritos/hooks/use-favoritos';
-import { AnuncioCard } from '@/features/anuncios/components/anuncio-card';
-import { LoadingOverlay } from '@/components/feedback/loading-overlay';
-import { ErrorMessage } from '@/components/feedback/error-message';
-import { ThemedView } from '@/components/ui/themed-view';
-import { ThemedText } from '@/components/ui/themed-text';
 import { useAuth } from '@/context/auth-context';
-import { useResponsive } from '@/hooks/use-responsive';
+import { useTheme } from '@/context/theme-context';
+import { useFavoritosContext } from '@/context/favoritos-context';
+import type { Anuncio } from '@/types';
+
+const { width: SW } = Dimensions.get('window');
+const CARD_W = SW * 0.58;
+
+const PALETTE = {
+  light: {
+    bg: '#FAF8F6', surface: '#FFFFFF', surfaceAlt: '#F6F2EE',
+    primary: '#8B4A1E', textMain: '#2B2B2B', textSub: '#6E6E6E',
+    textMuted: '#A08070', cardBg: '#FFFFFF', cardImg: '#F0E6D8',
+  },
+  dark: {
+    bg: '#121212', surface: '#1E1E1E', surfaceAlt: '#2A2A2A',
+    primary: '#C47A45', textMain: '#F0EDE9', textSub: '#B0A898',
+    textMuted: '#7A7068', cardBg: '#1E1E1E', cardImg: '#2A2A2A',
+  },
+};
+
+function tempoRelativo(data: string) {
+  const diff = Date.now() - new Date(data).getTime();
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) return 'Agora mesmo';
+  if (h < 24) return `Há ${h}h`;
+  return `Há ${Math.floor(h / 24)}d`;
+}
 
 export default function FavoritosScreen() {
   const { usuario } = useAuth();
-  const { favoritos, isLoading, error, toggleFavorito, refetch } = useFavoritos(usuario?.id ?? null);
+  const { theme } = useTheme();
+  const { favoritosAnuncios, toggleFavorito } = useFavoritosContext();
   const router = useRouter();
-  const { width } = useResponsive();
-
-  if (isLoading) return <LoadingOverlay mensagem="Carregando favoritos..." />;
-  if (error) return <ErrorMessage mensagem={error} onRetry={refetch} />;
+  const p = PALETTE[theme];
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={[styles.titulo, { fontSize: width * 0.055 }]}>Meus favoritos</ThemedText>
-      <FlatList
-        data={favoritos}
-        keyExtractor={(item) => String(item.anuncioId)}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.lista}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <AnuncioCard
-            anuncio={item.anuncio}
-            favoritado
-            onPress={() => router.push(`/(app)/anuncios/${item.anuncioId}`)}
-            onFavoritar={() => toggleFavorito(item.anuncioId)}
-          />
-        )}
-        ListEmptyComponent={
-          <View style={styles.vazio}>
-            <ThemedText style={{ fontSize: 48 }}>🤍</ThemedText>
-            <ThemedText style={styles.vazioText}>Você ainda não favoritou nenhum anúncio.</ThemedText>
+    <View style={{ flex: 1, backgroundColor: p.bg }}>
+      <View style={[s.header, { backgroundColor: p.bg }]}>
+        <Text style={[s.titulo, { color: p.textMain }]}>Meus Favoritos</Text>
+        <Text style={[s.sub, { color: p.textMuted }]}>{favoritosAnuncios.length} item(s)</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={s.lista} showsVerticalScrollIndicator={false}>
+        {favoritosAnuncios.length === 0 ? (
+          <View style={s.vazio}>
+            <Text style={{ fontSize: 52 }}>🤍</Text>
+            <Text style={[s.vazioText, { color: p.textMuted }]}>
+              Você ainda não possui itens favoritos.
+            </Text>
           </View>
-        }
-      />
-    </ThemedView>
+        ) : (
+          <View style={s.grid}>
+            {favoritosAnuncios.map((anuncio: Anuncio) => (
+              <TouchableOpacity
+                key={String(anuncio.id)}
+                style={[card.wrap, { backgroundColor: p.cardBg }]}
+                onPress={() => router.push(`/(app)/anuncios/${anuncio.id}`)}
+                activeOpacity={0.88}>
+                {anuncio.foto ? (
+                  <Image source={{ uri: anuncio.foto }} style={card.img} resizeMode="cover" />
+                ) : (
+                  <View style={[card.semImg, { backgroundColor: p.cardImg }]}>
+                    <Text style={{ fontSize: 36 }}>📦</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={card.favBtn}
+                  onPress={() => usuario && toggleFavorito(anuncio, usuario.id)}
+                  hitSlop={8}>
+                  <Text style={{ fontSize: 18 }}>❤️</Text>
+                </TouchableOpacity>
+                <View style={card.info}>
+                  <Text style={[card.nome, { color: p.textMain }]} numberOfLines={2}>
+                    {anuncio.nome}
+                  </Text>
+                  <Text style={[card.sub, { color: p.primary }]}>
+                    {anuncio.categoria.nome} • {anuncio.tamanho}
+                  </Text>
+                  {anuncio.doador?.cidade ? (
+                    <Text style={[card.meta, { color: p.textMuted }]}>
+                      📍 {anuncio.doador.cidade}{anuncio.doador.estado ? `, ${anuncio.doador.estado}` : ''}
+                    </Text>
+                  ) : null}
+                  <Text style={[card.meta, { color: p.textMuted }]}>
+                    {tempoRelativo(anuncio.dataCadastro)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 16 },
-  titulo: { fontWeight: 'bold', paddingHorizontal: 16, marginBottom: 12 },
-  lista: { paddingHorizontal: 16, paddingBottom: 24 },
-  row: { justifyContent: 'space-between' },
-  vazio: { flex: 1, alignItems: 'center', paddingTop: 60, gap: 12 },
-  vazioText: { opacity: 0.5, fontSize: 14, textAlign: 'center' },
+const card = StyleSheet.create({
+  wrap: {
+    width: CARD_W,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  img: { width: '100%', height: 180 },
+  semImg: { width: '100%', height: 180, alignItems: 'center', justifyContent: 'center' },
+  favBtn: { position: 'absolute', top: 10, right: 10 },
+  info: { padding: 12, gap: 3 },
+  nome: { fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  sub: { fontSize: 12 },
+  meta: { fontSize: 11 },
+});
+
+const s = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 52,
+    paddingBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  titulo: { fontSize: 22, fontWeight: '700' },
+  sub: { fontSize: 13 },
+  lista: { paddingHorizontal: 16, paddingBottom: 32 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center' },
+  vazio: { flex: 1, alignItems: 'center', paddingTop: 80, gap: 16 },
+  vazioText: { fontSize: 15, textAlign: 'center', maxWidth: 260 },
 });

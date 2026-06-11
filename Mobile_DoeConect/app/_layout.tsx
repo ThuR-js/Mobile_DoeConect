@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 
 import { AuthProvider } from '@/context/auth-context';
 import { ThemeProvider as AppThemeProvider, useTheme } from '@/context/theme-context';
+import { FavoritosProvider } from '@/context/favoritos-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -31,7 +32,9 @@ export default function RootLayout() {
   return (
     <AppThemeProvider>
       <AuthProvider>
-        <RootLayoutInner />
+        <FavoritosProvider>
+          <RootLayoutInner />
+        </FavoritosProvider>
       </AuthProvider>
     </AppThemeProvider>
   );

@@ -11,28 +11,41 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
 import { useAnuncios } from '@/features/anuncios/hooks/use-anuncios';
-import { useFavoritos } from '@/features/favoritos/hooks/use-favoritos';
+import { useFavoritosContext } from '@/context/favoritos-context';
 import { LoadingOverlay } from '@/components/feedback/loading-overlay';
 import { ErrorMessage } from '@/components/feedback/error-message';
-import type { Anuncio } from '@/types';
+import { categoriaService } from '@/features/anuncios/services/categoria-service';
+import type { Anuncio, Categoria } from '@/types';
 
 const { width: SW } = Dimensions.get('window');
 const CARD_W = SW * 0.58;
 
-const CATEGORIAS: { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { id: 'todos',      label: 'Todos',      icon: 'apps-outline' },
-  { id: 'camisetas',  label: 'Camisetas',  icon: 'shirt-outline' },
-  { id: 'tenis',      label: 'Tênis',      icon: 'footsteps-outline' },
-  { id: 'calcas',     label: 'Calças',     icon: 'happy-outline' },
-  { id: 'blusas',     label: 'Moletons',   icon: 'bag-handle-outline' },
-  { id: 'shorts',     label: 'Shorts',     icon: 'cut-outline' },
-  { id: 'outros',     label: 'Outros',     icon: 'ellipsis-horizontal-outline' },
-];
+const ICONE_CATEGORIA: Record<string, keyof typeof Ionicons.glyphMap> = {
+  camisetas:  'shirt-outline',
+  camiseta:   'shirt-outline',
+  tênis:      'footsteps-outline',
+  tenis:      'footsteps-outline',
+  calças:     'cut-outline',
+  calcas:     'cut-outline',
+  blusas:     'bag-handle-outline',
+  blusa:      'bag-handle-outline',
+  moletons:   'bag-handle-outline',
+  shorts:     'sunny-outline',
+  short:      'sunny-outline',
+};
+
+function iconeParaCategoria(nome: string): keyof typeof Ionicons.glyphMap {
+  const key = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (const [k, icon] of Object.entries(ICONE_CATEGORIA)) {
+    if (key.includes(k)) return icon;
+  }
+  return 'ellipsis-horizontal-outline';
+}
 
 // Paleta por tema
 const PALETTE = {
@@ -129,13 +142,40 @@ function CardAnuncio({
 export default function HomeScreen() {
   const { usuario } = useAuth();
   const { theme } = useTheme();
-  const { anuncios, isLoading, error, refetch } = useAnuncios();
-  const { isFavoritado, toggleFavorito } = useFavoritos(usuario?.id ?? null);
-  const router = useRouter();
-
   const [busca, setBusca] = useState('');
-  const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
-  const [filtroModal, setFiltroModal] = useState<string | null>(null);
+  const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(null);
+  const [filtroModal, setFiltroModal] = useState<'tamanho' | 'regiao' | null>(null);
+  const [tamanhoAtivo, setTamanhoAtivo] = useState<string | null>(null);
+  const [regiaoAtiva, setRegiaoAtiva] = useState<string | null>(null);
+  const [subTamanho, setSubTamanho] = useState<'roupas' | 'tenis'>('roupas');
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+
+  const router = useRouter();
+  const { anuncios, isLoading, error, refetch } = useAnuncios(categoriaAtiva);
+  const { isFavoritado, toggleFavorito } = useFavoritosContext();
+
+  useEffect(() => {
+    categoriaService.listar().then(setCategorias).catch(() => {});
+  }, []);
+
+  const categoriasVisiveis: Categoria[] = categorias.length > 0
+    ? categorias
+    : Array.from(new Map(anuncios.map((a) => [a.categoria.id, a.categoria])).values());
+
+  const TAMANHOS_ROUPAS = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
+  const TAMANHOS_TENIS = Array.from({ length: 15 }, (_, i) => String(34 + i));
+
+  const tamanhosDosAnuncios = Array.from(new Set(anuncios.map((a) => a.tamanho).filter(Boolean)));
+  const tamanhosRoupasExtras = tamanhosDosAnuncios.filter(
+    (t) => !TAMANHOS_ROUPAS.includes(t.toUpperCase()) && isNaN(Number(t))
+  );
+  const tamanhosRoupas = [...TAMANHOS_ROUPAS, ...tamanhosRoupasExtras];
+  const tamanhosTenisExtras = tamanhosDosAnuncios.filter(
+    (t) => !isNaN(Number(t)) && !TAMANHOS_TENIS.includes(t)
+  );
+  const tamanhosTenis = [...TAMANHOS_TENIS, ...tamanhosTenisExtras].sort((a, b) => Number(a) - Number(b));
+
+  const regioes = Array.from(new Set(anuncios.map((a) => a.regiao).filter(Boolean))) as string[];
 
   const p = PALETTE[theme];
   const primeiroNome = usuario?.nome?.trim().split(' ')[0] ?? '';
@@ -147,18 +187,9 @@ export default function HomeScreen() {
         a.doador?.cidade?.toLowerCase().includes(busca.toLowerCase()) ||
         a.doador?.estado?.toLowerCase().includes(busca.toLowerCase())
       : true;
-    const matchCategoria = (() => {
-      if (categoriaAtiva === 'todos') return true;
-      const nome = a.nome.toLowerCase();
-      const cat = a.categoria.nome.toLowerCase();
-      if (categoriaAtiva === 'camisetas') return nome.includes('camisa') || nome.includes('camiseta');
-      if (categoriaAtiva === 'tenis') return nome.includes('têni') || nome.includes('tenis') || cat.includes('calçado') || cat.includes('tenis');
-      if (categoriaAtiva === 'calcas') return nome.includes('calça') || nome.includes('calca');
-      if (categoriaAtiva === 'blusas') return nome.includes('blusa') || cat.includes('blusa') || cat.includes('moleton') || cat.includes('moletons');
-      if (categoriaAtiva === 'shorts') return nome.includes('short');
-      return cat.includes(categoriaAtiva);
-    })();
-    return matchBusca && matchCategoria;
+    const matchTamanho = tamanhoAtivo ? a.tamanho === tamanhoAtivo : true;
+    const matchRegiao = regiaoAtiva ? a.regiao === regiaoAtiva : true;
+    return matchBusca && matchTamanho && matchRegiao;
   });
 
   if (isLoading) return <LoadingOverlay mensagem="Carregando doações..." />;
@@ -206,6 +237,9 @@ export default function HomeScreen() {
             placeholderTextColor={p.placeholder}
             value={busca}
             onChangeText={setBusca}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
           />
         </View>
 
@@ -214,29 +248,25 @@ export default function HomeScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={s.cats}>
-          {CATEGORIAS.map((cat) => {
-            const ativa = categoriaAtiva === cat.id;
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={s.catItem}
-                onPress={() => setCategoriaAtiva(cat.id)}>
-                <View style={[
-                  s.catIcon,
-                  { backgroundColor: ativa ? p.primary : p.surfaceAlt },
-                ]}>
-                  <Ionicons
-                    name={cat.icon}
-                    size={22}
-                    color={ativa ? '#FFFFFF' : p.primary}
-                  />
-                </View>
-                <Text style={[s.catLabel, { color: ativa ? p.primary : p.textSub, fontWeight: ativa ? '700' : '500' }]}>
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {/* Todos */}
+          <TouchableOpacity style={s.catItem} onPress={() => setCategoriaAtiva(null)}>
+            <View style={[s.catIcon, { backgroundColor: categoriaAtiva === null ? p.primary : p.surfaceAlt }]}>
+              <Ionicons name="apps-outline" size={22} color={categoriaAtiva === null ? '#FFFFFF' : p.primary} />
+            </View>
+            <Text style={[s.catLabel, { color: categoriaAtiva === null ? p.primary : p.textSub, fontWeight: categoriaAtiva === null ? '700' : '500' }]}>
+              Todos
+            </Text>
+          </TouchableOpacity>
+          {categoriasVisiveis.map((cat) => (
+            <TouchableOpacity key={cat.id} style={s.catItem} onPress={() => setCategoriaAtiva(cat.id)}>
+              <View style={[s.catIcon, { backgroundColor: categoriaAtiva === cat.id ? p.primary : p.surfaceAlt }]}>
+                <Ionicons name={iconeParaCategoria(cat.nome)} size={22} color={categoriaAtiva === cat.id ? '#FFFFFF' : p.primary} />
+              </View>
+              <Text style={[s.catLabel, { color: categoriaAtiva === cat.id ? p.primary : p.textSub, fontWeight: categoriaAtiva === cat.id ? '700' : '500' }]}>
+                {cat.nome}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
 
         {/* ── DOAÇÕES EM DESTAQUE ── */}
@@ -263,7 +293,7 @@ export default function HomeScreen() {
                 anuncio={item}
                 favoritado={isFavoritado(item.id)}
                 onPress={() => router.push(`/(app)/anuncios/${item.id}`)}
-                onFavoritar={usuario ? () => toggleFavorito(item.id) : undefined}
+                onFavoritar={usuario ? () => toggleFavorito(item, usuario.id) : undefined}
                 p={p}
               />
             ))
@@ -272,14 +302,20 @@ export default function HomeScreen() {
 
         {/* ── FILTROS CHIPS ── */}
         <View style={s.chipsRow}>
-          {['Tamanho', 'Localização'].map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[s.chip, { backgroundColor: p.surfaceAlt, borderColor: p.border }]}
-              onPress={() => setFiltroModal(f)}>
-              <Text style={[s.chipText, { color: p.primary }]}>{f}</Text>
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            style={[s.chip, { backgroundColor: tamanhoAtivo ? p.primary : p.surfaceAlt, borderColor: p.border }]}
+            onPress={() => setFiltroModal('tamanho')}>
+            <Text style={[s.chipText, { color: tamanhoAtivo ? '#fff' : p.primary }]}>
+              {tamanhoAtivo ? `Tamanho: ${tamanhoAtivo}` : 'Tamanho'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.chip, { backgroundColor: regiaoAtiva ? p.primary : p.surfaceAlt, borderColor: p.border }]}
+            onPress={() => setFiltroModal('regiao')}>
+            <Text style={[s.chipText, { color: regiaoAtiva ? '#fff' : p.primary }]}>
+              {regiaoAtiva ? `Região: ${regiaoAtiva}` : 'Região'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -292,13 +328,68 @@ export default function HomeScreen() {
         <TouchableOpacity style={s.modalOverlay} onPress={() => setFiltroModal(null)} />
         <View style={[s.bottomSheet, { backgroundColor: p.sheetBg }]}>
           <View style={[s.sheetHandle, { backgroundColor: p.handle }]} />
-          <Text style={[s.sheetTitle, { color: p.textMain }]}>{filtroModal}</Text>
-          <Text style={[s.sheetSub, { color: p.textSub }]}>Em breve mais opções de filtro.</Text>
-          <TouchableOpacity
-            style={[s.sheetBtn, { backgroundColor: p.primary }]}
-            onPress={() => setFiltroModal(null)}>
-            <Text style={s.sheetBtnText}>Fechar</Text>
-          </TouchableOpacity>
+          <Text style={[s.sheetTitle, { color: p.textMain }]}>
+            {filtroModal === 'tamanho' ? 'Tamanho' : 'Região'}
+          </Text>
+
+          {filtroModal === 'tamanho' && (
+            <View style={s.subTabRow}>
+              {(['roupas', 'tenis'] as const).map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  style={[s.subTab, { backgroundColor: subTamanho === tab ? p.primary : p.surfaceAlt, borderColor: p.border }]}
+                  onPress={() => setSubTamanho(tab)}>
+                  <Text style={[s.subTabText, { color: subTamanho === tab ? '#fff' : p.primary }]}>
+                    {tab === 'roupas' ? 'Roupas' : 'Tênis'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
+            <TouchableOpacity
+              style={[s.sheetOption, { borderColor: p.border }]}
+              onPress={() => {
+                filtroModal === 'tamanho' ? setTamanhoAtivo(null) : setRegiaoAtiva(null);
+                setFiltroModal(null);
+              }}>
+              <Text style={[s.sheetOptionText, { color: p.primary }]}>Todos</Text>
+            </TouchableOpacity>
+
+            {filtroModal === 'tamanho' ? (
+              <View style={s.tamanhoGrid}>
+                {(subTamanho === 'roupas' ? tamanhosRoupas : tamanhosTenis).map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      s.tamanhoItem,
+                      { borderColor: p.border, backgroundColor: tamanhoAtivo === item ? p.primary : p.surfaceAlt },
+                    ]}
+                    onPress={() => { setTamanhoAtivo(item); setFiltroModal(null); }}>
+                    <Text style={[s.tamanhoItemText, { color: tamanhoAtivo === item ? '#fff' : p.textMain }]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              regioes.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    s.sheetOption,
+                    { borderColor: p.border },
+                    regiaoAtiva === item && { backgroundColor: p.primary },
+                  ]}
+                  onPress={() => { setRegiaoAtiva(item); setFiltroModal(null); }}>
+                  <Text style={[s.sheetOptionText, { color: regiaoAtiva === item ? '#fff' : p.textMain }]}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -393,7 +484,14 @@ const s = StyleSheet.create({
   bottomSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, gap: 12 },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 8 },
   sheetTitle: { fontSize: 18, fontWeight: '700' },
-  sheetSub: { fontSize: 14 },
+  sheetOption: { paddingVertical: 14, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, marginBottom: 8 },
+  sheetOptionText: { fontSize: 15, fontWeight: '500' },
+  subTabRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  subTab: { flex: 1, paddingVertical: 8, borderRadius: 20, borderWidth: 1, alignItems: 'center' },
+  subTabText: { fontSize: 13, fontWeight: '600' },
+  tamanhoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  tamanhoItem: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, borderWidth: 1, minWidth: 52, alignItems: 'center' },
+  tamanhoItemText: { fontSize: 14, fontWeight: '600' },
   sheetBtn: { marginTop: 8, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   sheetBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 15 },
 });
