@@ -66,7 +66,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         isLoading: false,
         error: apiError.message ?? 'Erro ao fazer login.',
       }));
-      throw err;
+      throw apiError;
     }
   }, []);
 

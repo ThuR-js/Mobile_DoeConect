@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Image,
   ScrollView,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  FlatList,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { anuncioService } from '@/features/anuncios/services/anuncio-service';
@@ -34,6 +35,7 @@ export default function AnuncioDetalheScreen() {
   const { usuario } = useAuth();
   const router = useRouter();
   const { width, height } = useResponsive();
+  const [fotoIndex, setFotoIndex] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -69,16 +71,42 @@ export default function AnuncioDetalheScreen() {
     return <ErrorMessage mensagem={error ?? 'Anúncio não encontrado.'} onRetry={() => router.back()} />;
 
   const disponivel = anuncio.statusAnuncio === 'ATIVO';
+  const fotosUnicas = anuncio.fotos
+    ? anuncio.fotos.split(',').map((f) => f.trim()).filter(Boolean)
+    : anuncio.foto
+    ? [anuncio.foto]
+    : [];
 
   return (
     <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {anuncio.foto ? (
-          <Image
-            source={{ uri: anuncio.foto }}
-            style={{ width, height: height * 0.35 }}
-            resizeMode="cover"
-          />
+        {fotosUnicas.length > 0 ? (
+          <View>
+            <FlatList
+              data={fotosUnicas}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(_, i) => String(i)}
+              onMomentumScrollEnd={(e) =>
+                setFotoIndex(Math.round(e.nativeEvent.contentOffset.x / width))
+              }
+              renderItem={({ item }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={{ width, height: height * 0.35 }}
+                  resizeMode="cover"
+                />
+              )}
+            />
+            {fotosUnicas.length > 1 && (
+              <View style={styles.dots}>
+                {fotosUnicas.map((_, i) => (
+                  <View key={i} style={[styles.dot, i === fotoIndex && styles.dotAtivo]} />
+                ))}
+              </View>
+            )}
+          </View>
         ) : (
           <ThemedView style={[styles.semImagem, { height: height * 0.25 }]}>
             <ThemedText style={{ fontSize: 64 }}>📦</ThemedText>
@@ -219,6 +247,9 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   semImagem: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0e6d8' },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: -20, paddingBottom: 8 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)' },
+  dotAtivo: { backgroundColor: '#fff', width: 18 },
   content: { padding: 20, gap: 14 },
   titulo: { fontWeight: 'bold', lineHeight: 28 },
   badgeRow: { flexDirection: 'row', gap: 8 },

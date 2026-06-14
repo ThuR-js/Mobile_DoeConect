@@ -27,8 +27,8 @@ export function setupInterceptors(instance: AxiosInstance) {
     (response) => response,
     (error: AxiosError) => {
       const status = error.response?.status ?? 0;
-      const serverMessage =
-        (error.response?.data as { message?: string })?.message ?? null;
+      const data = error.response?.data as any;
+      const serverMessage = data?.message ?? data?.error ?? null;
 
       const apiError: ApiError = {
         status,

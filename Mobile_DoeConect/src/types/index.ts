@@ -74,6 +74,7 @@ export type Anuncio = {
   nome: string;
   descricao: string;
   foto?: string;
+  fotos?: string;
   tamanho: string;
   condicao: string;
   regiao?: string;

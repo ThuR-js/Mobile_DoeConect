@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
+import { useRouter } from 'expo-router';
 import { usuarioService } from '@/features/usuarios/services/usuario-service';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
@@ -22,6 +24,7 @@ export default function PerfilScreen() {
   const { usuario, signOut, updateUsuario } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { width } = useResponsive();
+  const router = useRouter();
 
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(usuario?.nome ?? '');
@@ -78,11 +81,68 @@ export default function PerfilScreen() {
     }
   }
 
+  async function handleInativar() {
+    if (!usuario) return;
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm('Tem certeza que deseja inativar sua conta? Você não conseguirá mais acessar o app.')
+      : await new Promise<boolean>((resolve) =>
+          Alert.alert(
+            'Inativar conta',
+            'Tem certeza? Você não conseguirá mais acessar o app.',
+            [
+              { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Inativar', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          )
+        );
+    if (!confirmar) return;
+    try {
+      await usuarioService.inativar(usuario.id);
+      await signOut();
+      router.replace('/login');
+    } catch (err) {
+      const apiError = err as ApiError;
+      Alert.alert('Erro', apiError.message ?? 'Não foi possível inativar a conta.');
+    }
+  }
+
+  async function handleInativar() {
+    if (!usuario) return;
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm('Tem certeza que deseja inativar sua conta? Você não conseguirá mais acessar o app.')
+      : await new Promise<boolean>((resolve) =>
+          Alert.alert(
+            'Inativar conta',
+            'Tem certeza? Você não conseguirá mais acessar o app.',
+            [
+              { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Inativar', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          )
+        );
+    if (!confirmar) return;
+    try {
+      await usuarioService.inativar(usuario.id);
+      await signOut();
+      router.replace('/login');
+    } catch (err) {
+      const apiError = err as ApiError;
+      Alert.alert('Erro', apiError.message ?? 'Não foi possível inativar a conta.');
+    }
+  }
+
   async function handleLogout() {
-    Alert.alert('Sair', 'Deseja encerrar a sessão?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: signOut },
-    ]);
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm('Deseja encerrar a sessão?')
+      : await new Promise<boolean>((resolve) =>
+          Alert.alert('Sair', 'Deseja encerrar a sessão?', [
+            { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Sair', style: 'destructive', onPress: () => resolve(true) },
+          ])
+        );
+    if (!confirmar) return;
+    await signOut();
+    router.replace('/login');
   }
 
   if (!usuario) return null;
@@ -211,6 +271,20 @@ export default function PerfilScreen() {
       <TouchableOpacity style={[styles.btn, styles.btnLogout]} onPress={handleLogout}>
         <ThemedText style={{ color: '#c0392b', fontWeight: '600' }}>Sair da conta</ThemedText>
       </TouchableOpacity>
+
+      {/* Zona de Perigo */}
+      <ThemedView style={styles.zonaPerigo}>
+        <View style={styles.zonaPerigoHeader}>
+          <ThemedText style={styles.zonaPerigoIcone}>⚠️</ThemedText>
+          <ThemedText style={styles.zonaPerigoTitulo}>Zona de Perigo</ThemedText>
+        </View>
+        <ThemedText style={styles.zonaPerigoDesc}>
+          Inativar sua conta impede o acesso ao app. Esta ação pode ser revertida pelo administrador.
+        </ThemedText>
+        <TouchableOpacity style={styles.btnInativar} onPress={handleInativar}>
+          <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Inativar minha conta</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
     </ScrollView>
   );
 }
@@ -254,6 +328,26 @@ const styles = StyleSheet.create({
   btnPrimario: { backgroundColor: '#5C3317' },
   btnSecundario: { borderWidth: 1.5, borderColor: '#5C3317' },
   btnLogout: { borderWidth: 1.5, borderColor: '#c0392b', width: '100%', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 16 },
+  zonaPerigo: {
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: '#c0392b',
+    borderRadius: 10,
+    padding: 16,
+    marginTop: 16,
+    gap: 10,
+  },
+  zonaPerigoHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  zonaPerigoIcone: { fontSize: 18 },
+  zonaPerigoTitulo: { fontWeight: '700', fontSize: 15, color: '#c0392b' },
+  zonaPerigoDesc: { fontSize: 13, opacity: 0.7, lineHeight: 18 },
+  btnInativar: {
+    backgroundColor: '#c0392b',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
   errorBox: {
     backgroundColor: 'rgba(220,53,69,0.1)',
     borderRadius: 8,

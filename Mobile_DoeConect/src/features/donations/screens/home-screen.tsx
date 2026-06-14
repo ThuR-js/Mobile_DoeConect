@@ -11,7 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
@@ -115,7 +115,7 @@ function CardAnuncio({
         </View>
       )}
       {onFavoritar && (
-        <TouchableOpacity style={card.favBtn} onPress={onFavoritar} hitSlop={8}>
+        <TouchableOpacity style={card.favBtn} onPress={(e) => { e.stopPropagation(); onFavoritar(); }} hitSlop={8}>
           <Text style={{ fontSize: 18 }}>{favoritado ? '❤️' : '🤍'}</Text>
         </TouchableOpacity>
       )}
@@ -152,7 +152,8 @@ export default function HomeScreen() {
 
   const router = useRouter();
   const { anuncios, isLoading, error, refetch } = useAnuncios(categoriaAtiva);
-  const { isFavoritado, toggleFavorito } = useFavoritosContext();
+  const { favoritosIds, toggleFavorito } = useFavoritosContext();
+  const isFavoritado = useCallback((id: number) => favoritosIds.includes(id), [favoritosIds]);
 
   useEffect(() => {
     categoriaService.listar().then(setCategorias).catch(() => {});
@@ -366,7 +367,7 @@ export default function HomeScreen() {
                       s.tamanhoItem,
                       { borderColor: p.border, backgroundColor: tamanhoAtivo === item ? p.primary : p.surfaceAlt },
                     ]}
-                    onPress={() => { setTamanhoAtivo(item); setFiltroModal(null); }}>
+                    onPress={() => { setTamanhoAtivo(tamanhoAtivo === item ? null : item); setFiltroModal(null); }}>
                     <Text style={[s.tamanhoItemText, { color: tamanhoAtivo === item ? '#fff' : p.textMain }]}>
                       {item}
                     </Text>

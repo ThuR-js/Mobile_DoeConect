@@ -19,7 +19,10 @@ import { useResponsive } from '@/hooks/use-responsive';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const { signIn, isLoading, error, clearError } = useAuth();
+  const [contaInativa, setContaInativa] = useState(false);
+  const [reativando, setReativando] = useState(false);
+  const [erroLocal, setErroLocal] = useState<string | null>(null);
+  const { signIn, isLoading, clearError } = useAuth();
   const router = useRouter();
   const { width, height } = useResponsive();
 
@@ -28,11 +31,41 @@ export default function LoginScreen() {
       Alert.alert('Atenção', 'Preencha e-mail e senha.');
       return;
     }
+    setContaInativa(false);
+    setErroLocal(null);
+    clearError();
     try {
       await signIn({ email: email.trim(), senha });
       router.replace('/(tabs)');
-    } catch {
-      // erro já está no context
+    } catch (err: any) {
+      const msg: string = err?.message ?? '';
+      if (msg.toLowerCase().includes('inativa')) {
+        setContaInativa(true);
+      } else {
+        setErroLocal(msg || 'Erro ao fazer login.');
+      }
+    }
+  }
+
+  async function handleReativar() {
+    if (!email.trim() || !senha.trim()) {
+      Alert.alert('Atenção', 'Preencha e-mail e senha para reativar.');
+      return;
+    }
+    setReativando(true);
+    try {
+      const { api } = await import('@/services/api');
+      // Busca o usuário pelo email para pegar o id
+      const { data: usuarios } = await api.get('/usuario');
+      const usuario = usuarios.find((u: any) => u.email === email.trim() || u.username === email.trim());
+      if (!usuario) throw { message: 'Usuário não encontrado.' };
+      await api.put(`/usuario/${usuario.id}/reativar`, {});
+      Alert.alert('Conta reativada!', 'Você já pode fazer login normalmente.');
+      setContaInativa(false);
+    } catch (err: any) {
+      Alert.alert('Erro', err?.message ?? 'Não foi possível reativar a conta.');
+    } finally {
+      setReativando(false);
     }
   }
 
@@ -85,12 +118,27 @@ export default function LoginScreen() {
               Faça login para continuar
             </Text>
 
-            {error && (
-              <TouchableOpacity onPress={clearError}>
+            {erroLocal && !contaInativa && (
+              <TouchableOpacity onPress={() => setErroLocal(null)}>
                 <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>⚠️ {error}</Text>
+                  <Text style={styles.errorText}>⚠️ {erroLocal}</Text>
                 </View>
               </TouchableOpacity>
+            )}
+
+            {contaInativa && (
+              <View style={styles.inativaBox}>
+                <Text style={styles.inativaText}>⚠️ Sua conta está inativa.</Text>
+                <TouchableOpacity
+                  style={[styles.reativarBtn, reativando && { opacity: 0.6 }]}
+                  onPress={handleReativar}
+                  disabled={reativando}>
+                  {reativando
+                    ? <ActivityIndicator color="#fff" size="small" />
+                    : <Text style={{ color: '#fff', fontWeight: '700', textAlign: 'center' }}>Reativar minha conta</Text>
+                  }
+                </TouchableOpacity>
+              </View>
             )}
 
             <Text style={{ color: '#fff', fontSize: width * 0.04, marginBottom: 6, fontWeight: '600' }}>
@@ -180,6 +228,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(220,53,69,0.5)',
   },
   errorText: { color: '#ffb3b3', fontSize: 13 },
+  inativaBox: {
+    backgroundColor: 'rgba(255,152,0,0.2)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,152,0,0.5)',
+    gap: 10,
+  },
+  inativaText: { color: '#FFD180', fontSize: 13, fontWeight: '600' },
+  reativarBtn: {
+    backgroundColor: 'rgba(255,152,0,0.8)',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
   loginButton: {
     backgroundColor: '#5C3317',
     borderRadius: 10,
