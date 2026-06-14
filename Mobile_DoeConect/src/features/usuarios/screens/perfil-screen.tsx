@@ -106,31 +106,6 @@ export default function PerfilScreen() {
     }
   }
 
-  async function handleInativar() {
-    if (!usuario) return;
-    const confirmar = Platform.OS === 'web'
-      ? window.confirm('Tem certeza que deseja inativar sua conta? Você não conseguirá mais acessar o app.')
-      : await new Promise<boolean>((resolve) =>
-          Alert.alert(
-            'Inativar conta',
-            'Tem certeza? Você não conseguirá mais acessar o app.',
-            [
-              { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
-              { text: 'Inativar', style: 'destructive', onPress: () => resolve(true) },
-            ]
-          )
-        );
-    if (!confirmar) return;
-    try {
-      await usuarioService.inativar(usuario.id);
-      await signOut();
-      router.replace('/login');
-    } catch (err) {
-      const apiError = err as ApiError;
-      Alert.alert('Erro', apiError.message ?? 'Não foi possível inativar a conta.');
-    }
-  }
-
   async function handleLogout() {
     const confirmar = Platform.OS === 'web'
       ? window.confirm('Deseja encerrar a sessão?')

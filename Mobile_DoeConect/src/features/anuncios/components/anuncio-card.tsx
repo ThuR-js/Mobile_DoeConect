@@ -1,11 +1,7 @@
-import { Image, StyleSheet, TouchableOpacity, View, Dimensions, Platform } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import type { Anuncio } from '@/types';
-
-const screenWidth = Dimensions.get('window').width;
-const effectiveWidth = Platform.OS === 'web' ? Math.min(screenWidth, 390) : screenWidth;
-const CARD_W = (effectiveWidth - 16 * 2 - 12) / 2;
 
 type Props = {
   anuncio: Anuncio;
@@ -46,7 +42,7 @@ export function AnuncioCard({ anuncio, favoritado = false, onPress, onFavoritar 
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: CARD_W,
+    width: '47%',
   },
   card: {
     borderRadius: 12,

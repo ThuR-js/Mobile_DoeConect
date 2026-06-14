@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13 },
   chipTextAtivo: { color: '#fff', fontWeight: '600' },
   lista: { paddingHorizontal: 16, paddingBottom: 24 },
-  row: { justifyContent: 'flex-start', gap: 12 },
+  row: { justifyContent: 'flex-start', gap: 12, maxWidth: 390, alignSelf: 'center', width: '100%' },
   vazio: { flex: 1, alignItems: 'center', paddingTop: 60 },
   vazioText: { opacity: 0.5, fontSize: 14 },
 });

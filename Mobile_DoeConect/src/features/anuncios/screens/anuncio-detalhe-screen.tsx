@@ -207,8 +207,8 @@ function ModalConteudo({
         placeholder="Ex: (11) 99999-9999 / seu@email.com / prefiro contato por WhatsApp..."
         placeholderTextColor="#aaa"
         multiline
-        numberOfLines={4}
-        maxLength={40}
+        numberOfLines={6}
+        maxLength={200}
         value={contato}
         onChangeText={setContato}
         editable={!enviando}
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
   modalTitulo: { fontSize: 18, fontWeight: '700' },
   modalSubtitulo: { fontSize: 13, opacity: 0.7, lineHeight: 18 },
-  modalInputMultiline: { height: 100, textAlignVertical: 'top' },
+  modalInputMultiline: { height: 150, textAlignVertical: 'top' },
   modalInput: {
     borderWidth: 1,
     borderColor: 'rgba(92,51,23,0.3)',
