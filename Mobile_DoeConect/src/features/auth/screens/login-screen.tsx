@@ -55,11 +55,7 @@ export default function LoginScreen() {
     setReativando(true);
     try {
       const { api } = await import('@/services/api');
-      // Busca o usuário pelo email para pegar o id
-      const { data: usuarios } = await api.get('/usuario');
-      const usuario = usuarios.find((u: any) => u.email === email.trim() || u.username === email.trim());
-      if (!usuario) throw { message: 'Usuário não encontrado.' };
-      await api.put(`/usuario/${usuario.id}/reativar`, {});
+      await api.put('/usuario/reativar-por-credenciais', { email: email.trim(), senha });
       Alert.alert('Conta reativada!', 'Você já pode fazer login normalmente.');
       setContaInativa(false);
     } catch (err: any) {
