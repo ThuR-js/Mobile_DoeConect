@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
@@ -54,7 +55,7 @@ export default function FavoritosScreen() {
       <ScrollView contentContainerStyle={s.lista} showsVerticalScrollIndicator={false}>
         {favoritosAnuncios.length === 0 ? (
           <View style={s.vazio}>
-            <Text style={{ fontSize: 52 }}>🤍</Text>
+            <Ionicons name="heart-outline" size={52} color={p.textMuted} />
             <Text style={[s.vazioText, { color: p.textMuted }]}>
               Você ainda não possui itens favoritos.
             </Text>
@@ -71,14 +72,14 @@ export default function FavoritosScreen() {
                   <Image source={{ uri: anuncio.foto }} style={card.img} resizeMode="cover" />
                 ) : (
                   <View style={[card.semImg, { backgroundColor: p.cardImg }]}>
-                    <Text style={{ fontSize: 36 }}>📦</Text>
+                    <Ionicons name="cube-outline" size={36} color={p.textMuted} />
                   </View>
                 )}
                 <TouchableOpacity
                   style={card.favBtn}
                   onPress={() => usuario && toggleFavorito(anuncio, usuario.id)}
                   hitSlop={8}>
-                  <Text style={{ fontSize: 18 }}>❤️</Text>
+                  <Ionicons name="heart" size={18} color="#E05C5C" />
                 </TouchableOpacity>
                 <View style={card.info}>
                   <Text style={[card.nome, { color: p.textMain }]} numberOfLines={2}>
@@ -88,9 +89,12 @@ export default function FavoritosScreen() {
                     {anuncio.categoria.nome} • {anuncio.tamanho}
                   </Text>
                   {anuncio.doador?.cidade ? (
-                    <Text style={[card.meta, { color: p.textMuted }]}>
-                      📍 {anuncio.doador.cidade}{anuncio.doador.estado ? `, ${anuncio.doador.estado}` : ''}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Ionicons name="location-outline" size={11} color={p.textMuted} />
+                      <Text style={[card.meta, { color: p.textMuted }]}>
+                        {anuncio.doador.cidade}{anuncio.doador.estado ? `, ${anuncio.doador.estado}` : ''}
+                      </Text>
+                    </View>
                   ) : null}
                   <Text style={[card.meta, { color: p.textMuted }]}>
                     {tempoRelativo(anuncio.dataCadastro)}

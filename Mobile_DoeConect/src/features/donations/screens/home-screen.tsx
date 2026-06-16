@@ -10,7 +10,8 @@ import {
   RefreshControl,
   Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { IconCamiseta, IconCalca, IconShort } from '@/components/icons/clothing-icons';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
@@ -25,26 +26,22 @@ import type { Anuncio, Categoria } from '@/types';
 const { width: SW } = Dimensions.get('window');
 const CARD_W = SW * 0.58;
 
-const ICONE_CATEGORIA: Record<string, keyof typeof Ionicons.glyphMap> = {
-  camisetas:  'shirt-outline',
-  camiseta:   'shirt-outline',
-  tênis:      'footsteps-outline',
-  tenis:      'footsteps-outline',
-  calças:     'cut-outline',
-  calcas:     'cut-outline',
-  blusas:     'bag-handle-outline',
-  blusa:      'bag-handle-outline',
-  moletons:   'bag-handle-outline',
-  shorts:     'sunny-outline',
-  short:      'sunny-outline',
-};
+type ClothingIconComponent = (props: { size?: number; color?: string }) => JSX.Element;
 
-function iconeParaCategoria(nome: string): keyof typeof Ionicons.glyphMap {
+const ICONE_CATEGORIA_SVG: Array<{ match: string[]; component: ClothingIconComponent }> = [
+  { match: ['camiseta'],          component: IconCamiseta },
+  { match: ['calca', 'calça'],    component: IconCalca },
+  { match: ['blusa', 'moleton'],  component: ({ size = 22, color = '#8B4A1E' }) => <MaterialCommunityIcons name="tshirt-crew-outline" size={size} color={color} /> },
+  { match: ['short'],             component: IconShort },
+  { match: ['teni', 'têni'],      component: ({ size = 22, color = '#8B4A1E' }) => <Ionicons name="footsteps-outline" size={size} color={color} /> },
+];
+
+function iconeParaCategoria(nome: string): ClothingIconComponent | null {
   const key = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  for (const [k, icon] of Object.entries(ICONE_CATEGORIA)) {
-    if (key.includes(k)) return icon;
+  for (const { match, component } of ICONE_CATEGORIA_SVG) {
+    if (match.some((m) => key.includes(m))) return component;
   }
-  return 'ellipsis-horizontal-outline';
+  return null;
 }
 
 // Paleta por tema
@@ -111,7 +108,7 @@ function CardAnuncio({
         <Image source={{ uri: anuncio.foto }} style={card.img} resizeMode="cover" />
       ) : (
         <View style={[card.semImg, { backgroundColor: p.cardImg }]}>
-          <Text style={{ fontSize: 36 }}>📦</Text>
+          <Ionicons name="cube-outline" size={40} color={p.textMuted} />
         </View>
       )}
       {onFavoritar && (
@@ -127,9 +124,12 @@ function CardAnuncio({
           {anuncio.categoria.nome} • {anuncio.tamanho}
         </Text>
         {anuncio.doador?.cidade ? (
-          <Text style={[card.meta, { color: p.textMuted }]}>
-            📍 {anuncio.doador.cidade}{anuncio.doador.estado ? `, ${anuncio.doador.estado}` : ''}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <Ionicons name="location-outline" size={11} color={p.textMuted} />
+            <Text style={[card.meta, { color: p.textMuted }]}>
+              {anuncio.doador.cidade}{anuncio.doador.estado ? `, ${anuncio.doador.estado}` : ''}
+            </Text>
+          </View>
         ) : null}
         <Text style={[card.meta, { color: p.textMuted }]}>
           {tempoRelativo(anuncio.dataCadastro)}
@@ -221,17 +221,22 @@ export default function HomeScreen() {
         {/* ── BANNER ── */}
         <View style={[s.banner, { backgroundColor: p.surfaceAlt }]}>
           <View style={{ flex: 1, gap: 6 }}>
-            <Text style={[s.bannerOla, { color: p.primary }]}>Olá, {primeiroNome}! 👋</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[s.bannerOla, { color: p.primary }]}>Olá, {primeiroNome}!</Text>
+              <Ionicons name="hand-left-outline" size={20} color={p.primary} />
+            </View>
             <Text style={[s.bannerSub, { color: p.textSub }]}>
               Encontre doações que podem fazer a diferença na sua vida.
             </Text>
           </View>
-          <Text style={{ fontSize: 52 }}>🎁</Text>
+          <View style={[s.bannerIconWrap, { backgroundColor: p.border }]}>
+            <Ionicons name="gift-outline" size={28} color={p.primary} />
+          </View>
         </View>
 
         {/* ── BUSCA ── */}
         <View style={[s.searchWrap, { backgroundColor: p.surface, borderColor: p.border }]}>
-          <Text style={[s.searchIcon, { color: p.textMuted }]}>🔍</Text>
+          <Ionicons name="search-outline" size={18} color={p.textMuted} />
           <TextInput
             style={[s.searchInput, { color: p.inputText }]}
             placeholder="Buscar doações..."
@@ -258,16 +263,22 @@ export default function HomeScreen() {
               Todos
             </Text>
           </TouchableOpacity>
-          {categoriasVisiveis.map((cat) => (
-            <TouchableOpacity key={cat.id} style={s.catItem} onPress={() => setCategoriaAtiva(cat.id)}>
-              <View style={[s.catIcon, { backgroundColor: categoriaAtiva === cat.id ? p.primary : p.surfaceAlt }]}>
-                <Ionicons name={iconeParaCategoria(cat.nome)} size={22} color={categoriaAtiva === cat.id ? '#FFFFFF' : p.primary} />
-              </View>
-              <Text style={[s.catLabel, { color: categoriaAtiva === cat.id ? p.primary : p.textSub, fontWeight: categoriaAtiva === cat.id ? '700' : '500' }]}>
-                {cat.nome}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {categoriasVisiveis.map((cat) => {
+            const CustomIcon = iconeParaCategoria(cat.nome);
+            const iconColor = categoriaAtiva === cat.id ? '#FFFFFF' : p.primary;
+            return (
+              <TouchableOpacity key={cat.id} style={s.catItem} onPress={() => setCategoriaAtiva(cat.id)}>
+                <View style={[s.catIcon, { backgroundColor: categoriaAtiva === cat.id ? p.primary : p.surfaceAlt }]}>
+                  {CustomIcon
+                    ? <CustomIcon size={22} color={iconColor} />
+                    : <Ionicons name="ellipsis-horizontal-outline" size={22} color={iconColor} />}
+                </View>
+                <Text style={[s.catLabel, { color: categoriaAtiva === cat.id ? p.primary : p.textSub, fontWeight: categoriaAtiva === cat.id ? '700' : '500' }]}>
+                  {cat.nome}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* ── DOAÇÕES EM DESTAQUE ── */}
@@ -284,7 +295,7 @@ export default function HomeScreen() {
           contentContainerStyle={s.carouselWrap}>
           {filtrados.length === 0 ? (
             <View style={[s.vazio]}>
-              <Text style={{ fontSize: 40 }}>📦</Text>
+              <Ionicons name="cube-outline" size={40} color={p.textMuted} />
               <Text style={[s.vazioText, { color: p.textMuted }]}>Nenhuma doação encontrada.</Text>
             </View>
           ) : (
@@ -441,6 +452,13 @@ const s = StyleSheet.create({
     padding: 18,
     gap: 12,
   },
+  bannerIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bannerOla: { fontSize: 18, fontWeight: '700' },
   bannerSub: { fontSize: 13, lineHeight: 18 },
 
@@ -455,7 +473,7 @@ const s = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
   },
-  searchIcon: { fontSize: 16 },
+
   searchInput: { flex: 1, fontSize: 15 },
 
   cats: { paddingHorizontal: 16, gap: 12, marginBottom: 24 },

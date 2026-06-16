@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth-context';
 import { solicitacaoService } from '@/features/anuncios/services/solicitacao-service';
 import { LoadingOverlay } from '@/components/feedback/loading-overlay';
@@ -96,7 +97,7 @@ export default function SolicitacoesScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.vazio}>
-              <ThemedText style={{ fontSize: 48 }}>📋</ThemedText>
+              <Ionicons name="document-text-outline" size={48} color="#A08070" />
               <ThemedText style={styles.vazioText}>
                 Você ainda não enviou nenhuma solicitação.
               </ThemedText>

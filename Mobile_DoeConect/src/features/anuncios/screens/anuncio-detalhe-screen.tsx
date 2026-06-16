@@ -12,6 +12,7 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { anuncioService } from '@/features/anuncios/services/anuncio-service';
 import { solicitacaoService } from '@/features/anuncios/services/solicitacao-service';
@@ -109,7 +110,7 @@ export default function AnuncioDetalheScreen() {
           </View>
         ) : (
           <ThemedView style={[styles.semImagem, { height: height * 0.25 }]}>
-            <ThemedText style={{ fontSize: 64 }}>📦</ThemedText>
+            <Ionicons name="cube-outline" size={56} color="#A08070" />
           </ThemedView>
         )}
 

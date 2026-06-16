@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
 import { useRouter } from 'expo-router';
@@ -129,7 +130,7 @@ export default function PerfilScreen() {
         {usuario.foto ? (
           <Image source={{ uri: usuario.foto }} style={styles.avatarImage} />
         ) : (
-          <ThemedText style={{ fontSize: 48 }}>👤</ThemedText>
+          <Ionicons name="person-outline" size={48} color="#5C3317" />
         )}
       </ThemedView>
 
@@ -141,7 +142,10 @@ export default function PerfilScreen() {
 
       {error && (
         <View style={styles.errorBox}>
-          <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="alert-circle-outline" size={16} color="#c0392b" />
+            <ThemedText style={styles.errorText}>{error}</ThemedText>
+          </View>
         </View>
       )}
 
@@ -187,7 +191,10 @@ export default function PerfilScreen() {
 
         {senhaError && (
           <View style={[styles.errorBox, { marginBottom: 8 }]}>
-            <ThemedText style={styles.errorText}>⚠️ {senhaError}</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="alert-circle-outline" size={16} color="#c0392b" />
+              <ThemedText style={styles.errorText}>{senhaError}</ThemedText>
+            </View>
           </View>
         )}
 
@@ -232,9 +239,16 @@ export default function PerfilScreen() {
 
       {/* Tema */}
       <ThemedView style={styles.themeRow}>
-        <ThemedText style={{ fontWeight: '600', fontSize: 15 }}>
-          {theme === 'dark' ? '🌙 Modo escuro' : '☀️ Modo claro'}
-        </ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Ionicons
+            name={theme === 'dark' ? 'moon-outline' : 'sunny-outline'}
+            size={18}
+            color="#5C3317"
+          />
+          <ThemedText style={{ fontWeight: '600', fontSize: 15 }}>
+            {theme === 'dark' ? 'Modo escuro' : 'Modo claro'}
+          </ThemedText>
+        </View>
         <Switch
           value={theme === 'dark'}
           onValueChange={toggleTheme}
@@ -250,7 +264,7 @@ export default function PerfilScreen() {
       {/* Zona de Perigo */}
       <ThemedView style={styles.zonaPerigo}>
         <View style={styles.zonaPerigoHeader}>
-          <ThemedText style={styles.zonaPerigoIcone}>⚠️</ThemedText>
+          <Ionicons name="warning-outline" size={18} color="#c0392b" />
           <ThemedText style={styles.zonaPerigoTitulo}>Zona de Perigo</ThemedText>
         </View>
         <ThemedText style={styles.zonaPerigoDesc}>
@@ -313,7 +327,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   zonaPerigoHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  zonaPerigoIcone: { fontSize: 18 },
   zonaPerigoTitulo: { fontWeight: '700', fontSize: 15, color: '#c0392b' },
   zonaPerigoDesc: { fontSize: 13, opacity: 0.7, lineHeight: 18 },
   btnInativar: {
