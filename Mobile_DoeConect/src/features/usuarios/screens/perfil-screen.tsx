@@ -82,6 +82,31 @@ export default function PerfilScreen() {
     }
   }
 
+  async function handleExcluir() {
+    if (!usuario) return;
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm('ATENÇÃO: Esta ação é IRREVERSÍVEL! Todos os seus dados serão deletados permanentemente. Confirmar?')
+      : await new Promise<boolean>((resolve) =>
+          Alert.alert(
+            'Excluir conta',
+            'Esta ação é irreversível! Todos os seus dados serão deletados permanentemente.',
+            [
+              { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Excluir', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          )
+        );
+    if (!confirmar) return;
+    try {
+      await usuarioService.deletar(usuario.id);
+      await signOut();
+      router.replace('/login');
+    } catch (err) {
+      const apiError = err as ApiError;
+      Alert.alert('Erro', apiError.message ?? 'Não foi possível excluir a conta.');
+    }
+  }
+
   async function handleInativar() {
     if (!usuario) return;
     const confirmar = Platform.OS === 'web'
@@ -272,6 +297,9 @@ export default function PerfilScreen() {
         </ThemedText>
         <TouchableOpacity style={styles.btnInativar} onPress={handleInativar}>
           <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Inativar minha conta</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.btnInativar, { backgroundColor: '#8B0000', marginTop: 8 }]} onPress={handleExcluir}>
+          <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Excluir minha conta permanentemente</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ScrollView>
